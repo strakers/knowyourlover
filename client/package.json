@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "knowyourlover-client",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "socket.io-client": "^4.1.3",
     "vue": "^2.6.11"
   },
   "devDependencies": {
@@ -20,7 +21,17 @@
     "eslint": "^6.7.2",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-vue": "^6.2.2",
+    "lint-staged": "^11.0.0",
     "prettier": "^2.2.1",
     "vue-template-compiler": "^2.6.11"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,vue}": [
+      "vue-cli-service lint",
+      "git add"
+    ]
   }
 }
