@@ -7,16 +7,13 @@ The initial iteration required both individuals to share the same device (and wa
 ## Play
 
 Visit the link below to play:
-> http://placeholder-domain.com/url-does-not-yet-exist
-
+> [Know Your Lover](https://strakez.com/knowyourlover)
   
 ## How to Play
 
 Create a session for you and your boo, so the two of you can play together. You'll each be asked the same question, and you'll answer individually at the same time. You can guess each other's answers or move on to the next question.
 
 Once all the questions have finished, you'll be able to review the questions and see how well you know each other.
-
-[Documentation](https://linktononexistantdocumentation)
 
   
 ## Run Locally
