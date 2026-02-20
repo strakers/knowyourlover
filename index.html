@@ -1,0 +1,256 @@
+<!DOCTYPE HTML>
+<html>
+<head lang="en" dir="ltr">
+<title>Get To Know Your Lover</title>
+<link rel="icon" type="image/png" href="favico.png">
+<meta name="description" content="50 Questions to get to know your lover better. This is a game I developed for my girlfriend and I, but I decided to share it with others." />
+<meta name="keywords" content="know, your, lover, questions, game, answers, trivia" />
+<meta name="robots" content="index, follow" />
+<meta property="og:title" content="Get To Know Your Lover" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://strakez.com/knowyourlover" />
+<meta property="og:image" content="http://strakez.com/dev/heart_beat.png" />
+<meta property="og:site_name" content="strakez.com" />
+<meta property="fb:app_id" content="135929433119737" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Language" content="en" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<link rel="stylesheet" href="" type="text/css" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script type="text/javascript">
+var answers = {},
+	questions = [],
+	turncount = 0;
+jQuery(document).ready(function(){
+	var list = jQuery('#question_list li'),
+		makeRandom = jQuery('#generate_number'),
+		out = jQuery('#output'),
+		his = jQuery('#his'),
+		hers = jQuery('#hers'),
+		boxes = jQuery('#answer_boxes'),
+		fadeTime = 500,
+		listcount = list.length - 1;
+		
+	list.contents().wrap('<div class="question">');
+	list.prepend(function(){ return '<div class="number">' + zerofill(jQuery(this).index('#question_list li')+1,2) + '</div>'; });
+	list.attr('data-index',function(){ return (jQuery(this).index('#question_list li')+1); });
+	list.hide();
+	boxes.hide();
+	
+	makeRandom.click(getquestion);	
+	jQuery('#answer_boxes button').click(hideanswer);	
+	jQuery('#report_answers').click(getreport);	
+	jQuery('.answer_box').blur(storeData);
+	
+	jQuery('body').delegate('#refresh','click',function(e){
+		var report = jQuery('#lovereport'), game = jQuery('#lovegame');			
+		answers = {};
+		questions = [];
+		turncount = 0;
+		list.hide();		
+		boxes.hide();
+		report.fadeOut(fadeTime*0.25).promise().done(function(){ game.fadeIn(fadeTime); });
+		his.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+		hers.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+	})
+	
+	.delegate('#continue','click',function(e){
+		var report = jQuery('#lovereport'), game = jQuery('#lovegame');						
+		report.fadeOut(fadeTime*0.25).promise().done(function(){ game.slideDown(fadeTime); });
+		his.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+		hers.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+	});
+	
+	function storeData(){
+		var currIndex = list.filter(':visible').index('#question_list li')+1, hisVal = his.val(), herVal = hers.val();;
+		if( currIndex ) answers['q' + currIndex ] = { his: hisVal, hers: herVal };
+	}
+	function getnumber(){
+		var n = Math.floor(Math.random()*listcount);
+		if(turncount > listcount) return 0;
+		for(var i=0;i<questions.length;++i){
+			if(n == questions[i]) { return getnumber(); }
+		}
+		questions.push(n);
+		return n;
+	}
+	function getquestion(e,f){
+		if(turncount == listcount){ getreport(); return this; }		
+		var me = jQuery(this);
+			gennum = f || getnumber(),
+			currIndex = list.filter(':visible').index('#question_list li')+1,
+			hisVal = his.val(), herVal = hers.val();
+		me.unbind('click',getquestion);		
+		if( gennum % 1 == 0 ){
+			list.not(':eq('+gennum+')').fadeOut(fadeTime).promise().done(function(){ list.eq(gennum).fadeIn(fadeTime); });	
+		} else {
+			gennum = getnumber();
+			list.not(':eq('+gennum+')').fadeOut(fadeTime).promise().done(function(){ list.eq(gennum).fadeIn(fadeTime); });	
+		}		
+		storeData();	
+		++turncount; // console.log('turn',turncount, '---', gennum);
+		if(boxes.is(':hidden')) boxes.slideDown(fadeTime);	
+		his.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+		hers.val('').fadeIn(fadeTime*.5).siblings('button').html('Hide'); 
+		
+		list.promise().done(function(){ me.bind('click',getquestion); });
+	}
+	function getreport(e){
+		var report = jQuery('#lovereport'), game = jQuery('#lovegame'), reporting = '';
+		reporting += '<h2>Your Reponses</h2>';
+		reporting += '<div>';
+		for(var s in answers){
+			var num,ques,rhis,rhers;
+			num = s.substr(1);
+			ques = list.eq(num-1).find('.question').html();
+			rhis = answers[s].his ? 'He said: "<span style="color:#0af;">' + answers[s].his + '</span>".' : 'He didn\'t say anything.';
+			rhers = answers[s].hers? 'She said: "<span style="color:#e4b;">' + answers[s].hers + '</span>".' : 'She didn\'t say anything.';
+			reporting += '<div><span class="question"><strong>Q'+zerofill(num)+'</strong>: <em>'+ques+'</em></span>'+
+				'<ul class="answer"><li class="his">'+rhis+'</li><li class="hers">'+rhers+'</li></ul></div><br />';
+		}
+		reporting += '</div><br /><button id="refresh">Start Over</button>';
+		if(turncount <= listcount) reporting += ' <button id="continue">Continue</button>';
+		reporting += '</div>';
+		game.slideUp(fadeTime);
+		report.hide(0).html( reporting ).fadeIn(fadeTime);
+	}
+	function hideanswer(e){
+		var me = jQuery(this), field = me.siblings('textarea'), bool = field.is(':visible');
+		if( bool ){ field.fadeOut(fadeTime*.5); me.html( 'Show' ); } 
+		else { field.fadeIn(fadeTime*.5); me.html( 'Hide' ); }		
+		storeData();	
+	}
+});
+function zerofill( num, len ){
+	var s = num.toString(); len = len || 2;
+	for(var i=0;i<len;++i){ if(s.length < len) s = "0" + s; }
+	return s;
+}
+</script>
+<style type="text/css">
+html, body { font-family: Arial, Helvetica, sans-serif; background: #ccc; margin: 0; padding: 0; min-height: 100%; }
+#container { background-color: #fff; margin: 0 auto; width: 720px; min-height: 100%; padding: 0 40px 40px; border-radius: 0 0 10px 10px }
+#intro {border-bottom: 1px solid #ccc; margin-bottom: 30px; padding-bottom: 20px;}
+#generator { padding: 4px 0 30px; border-bottom: 1px solid #ccc; margin-bottom: 50px; }
+button { padding: 20px 50px; }
+#question_list { margin: 0; padding: 0; }
+#question_list li { list-style: none; clear: both; margin-right: 15px; }
+#question_list li , button , #answer_boxes textarea { font-size: 16px; font-family: Arial, Helvetica, sans-serif; }
+#question_list li .number { float: left; margin: 0 10px 30px; padding: 7px 10px; clear:both; color: #aaa; font-size: 36px; }
+#question_list li .question { padding-top: 7px; }
+#answer_boxes { clear: both; margin-top: 80px; }
+#answer_boxes div { border-top: 1px solid #ccc; margin: 30px 0; padding: 20px 0; min-height: 120px; padding-right: 20px; background-image: url('mystery.png'); background-position: 90px 20px; background-repeat: no-repeat; }
+#answer_boxes textarea { border: 1px solid #ccc; background-color: #eee; border-radius: 0 10px 10px 10px; padding: 10px; width: 400px; max-width: 400px; min-height: 100px; }
+#answer_boxes label { width: 60px; float: left; padding-top: 13px; padding-left: 20px; }
+#answer_boxes .answer_box { }
+#answer_boxes button { float: right; }
+#lovereport { padding: 4px 0 0; margin-bottom: 50px; height: 100%; clear: both; display: none; }
+hr { background: none; border-top: 1px solid #ccc; height: 0px; }
+#disclaimer { border-top: 1px solid #ccc; margin-top: 50px; padding-top: 20px;}
+small { color: #aaa; }
+#lovereport ul.answer { margin: 0; }
+a { color: #555; font-weight: bold; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+@media print{
+	button, #generator { display: none; }
+}
+</style>
+</head>
+
+<body><div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<div id="container">
+    <div id="intro">&nbsp;
+    	<header>
+        	<h1>Know Your Lover</h1>
+        	<div class="fb-like" data-href="http://strakez.com/knowyourlover" data-send="true" data-layout="button_count" data-width="450" data-show-faces="true" data-font="lucida grande"></div>
+        </header>
+    </div>
+    <div id="lovegame">
+        <div id="generator">
+        	<button id="generate_number">Generate Question</button>
+        </div>
+        <div>
+            <ol id="question_list">
+                <li>Is there anything you are afraid to tell me?</li>
+                <li>If money were no object, what would you do for a living?</li>
+                <li>Heck, if money were no object and you never had to work a day for the rest of your life, how would you prefer to spend each and every day?</li>
+                <li>Do you have any regrets? Is there anything you wish you could do over?</li>
+                <li>Why did you fall in love with me?</li>
+                <li>Why do you love ________? (For instance, "Why do you love riding your bike?")</li>
+                <li>What would make life no longer worth living? (Note: when one woman asked her husband this question, she was convinced that he would tell her that life would not be worth living if he could not ride his bike. Instead he said, "My penis could fall off." She was so surprised, as she did not expect that answer.)</li>
+                <li>Is there anything you want to do before you die?</li>
+                <li>What's the hardest thing you ever accomplished?</li>
+                <li>Of what are you most proud?</li>
+                <li>What was your first impression of me? </li>
+                <li>How accurate do you now think it was? On which counts do you think you were totally wrong and on which were you right? <span style="color:#999;">(from Q11: What was your first impression of me?)</span></li>
+                <li>What is your idea of a truly romantic evening?</li>
+                <li>If I promise not to get upset, can you tell me something that you'd like to change in me but don't have the nerve to tell me?</li>
+                <li>If you weren't in the profession you are, what would be your other dream profession and why?</li>
+                <li>Apart from the most obvious one, which other two areas of your body are the most sensitive and responsive?</li>
+                <li>Which three parts of my body are your personal favourites and why?</li>
+                <li>Can you name three qualities that attracted you when you met me/got to know me?</li>
+                <li>Which is your dream destination and why?</li>
+                <li>Which is your favourite movie of all time and favourite scene in it? (If the other hasn't seen it, narrate in detail.)</li>
+                <li>Which fruit/vegetable do you think I resemble and why?</li>
+                <li>Can you remember your earliest childhood memory of happiness and that of fear?</li>
+                <li>Your favourite aunt/uncle/cousin and why?</li>
+                <li>What are the qualities that draw you to people that you can base a friendship on?</li>
+                <li>Can you give me a mock session of how you would discuss sex education when you have a child?</li>
+                <li>Your first crush – what drew you to her/him?</li>
+                <li>Your first date – where did you go, what did you do and how long did the relationship last?</li>
+                <li>How have you coped with break-ups in the past?</li>
+                <li>What has been your scariest dream? Which has been your most frequently recurring one?</li>
+                <li>Which has been the best decision you ever made?</li>
+                <li>Which is the decision you regret the most?</li>
+                <li>Can you narrate to me your proudest moment?</li>
+                <li>If you won the lottery, what are the first three things you would do and which are the five things you've been most longing for, that you would buy?</li>
+                <li>If your house was on fire and you had a chance to grab only five things before leaving, they would be…</li>
+                <li>If you were asked whom you would like to be born again as, the answer would be…</li>
+                <li>Which is your favourite flavour of ice cream, your favourite junk food and your favourite dessert?</li>
+                <li>Whose wardrobe would you most like to possess and why?</li>
+                <li>The one argument your parents had, that you would try and avoid with your partner, would be over…</li>
+                <li>Which is your favourite asset/body part on a man/woman and why?</li>
+                <li>The most embarrassing thing that ever happened to you was…</li>
+                <li>Your most wicked fantasy has got to be… (Be open to this one, if you react adversely, he/she will never feel free to confide in you again.)</li>
+                <li>If our relationship doesn't work out, do you think we can remain friends? If no, why not?</li>
+                <li>Who are you closer to – your mum/dad - and why?</li>
+                <li>Your favourite song of all times and why – is it because of the lyrics, because of the memories associated with it or just the whole package?</li>
+                <li>If somebody handed you a magic lamp and gave you three wishes, what would they be?</li>
+                <li>What upsets you most in a relationship and what makes you the happiest?</li>
+                <li>What is your perception of how people see you?</li>
+                <li>If someone told you they saw me with another guy/girl, what would your first reaction be – she's/he's cheating on me, he's probably an old friend or I need to get to the bottom of this?</li>
+                <li>Can you think of something you craved for when you were young and were denied?</li>
+                <li>Have you ever found yourself attracted to someone of the same sex?</li>
+            </ol>
+        </div>
+        
+        <div id="answer_boxes">
+            <div style="background-image:url('mystery-him.png');"><button class="toggle">Hide</button><label for="his">Him:</label><textarea placeholder="Write your answer here and then click 'Hide'" class="answer_box" id="his" name="his"></textarea></div>
+            <div style="background-image:url('mystery-her.png');"><button class="toggle">Hide</button><label for="hers">Her:</label><textarea placeholder="Write your answer here and then click 'Hide'" class="answer_box" id="hers" name="hers"></textarea></div>
+        </div>
+        
+        <div><button id="report_answers">View All Answers</button></div>
+    </div>
+    <div id="lovereport"></div>
+    <div id="disclaimer"><small>These 50 questions were taken from various sites across the web, after searching for "get to know your lover/spouse better" on Google. If you have any questions to add or other suggestions, send me an email at <a href="mailto:contact@strakez.com?subject=Know%20Your%20Lover%20suggestions">contact@strakez.com</a>. Happy Valentine's Day, and have fun getting to know your lover!</small></div>
+</div>
+    <script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	
+	  ga('create', 'UA-29562957-1', 'strakez.com');
+	  ga('send', 'pageview');	
+	</script>
+</body>
+</html>
